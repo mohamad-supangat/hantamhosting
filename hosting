@@ -150,12 +150,22 @@ out_succ() {
 # FUNCTION: create_cloudflared dns
 # DESCRIPTION: auto create dns record in CLOUDFLARED_TUNNEL
 
-# cloudflare() {
-#     pwd=$(cloudflared tunnel route dns $CLOUDFLARED_TUNNEL)
-#     if $cmd &> /dev/null; then
-#         out_succ "Success create cloudflare tunnel"
-#     else
-# }
+cloudflared_add_host() {
+    config=$1
+    vhost=$2
+
+    read -r -d '' SERVICE_LINE <<- EOM
+# $vhost
+  - hostname: $vhost
+    service: http://localhost:80
+  - service: http_status:404
+EOM
+
+    sed -i '$ d' "$config"
+    echo "$SERVICE_LINE"
+    echo "$SERVICE_LINE" >> $config
+    out_succ "Success cloudflared_add_host $vhost"
+}
 
 
 # FUNCTION: create_database
@@ -487,6 +497,7 @@ vhost_create() {
 
     if promptyn "create cloudflare tunnel route dns ? "; then
         if cloudflared tunnel route dns "$CLOUDFLARED_TUNNEL_NAME" "$vhost"  &> /dev/null; then
+
             out_succ "Tunnel $vhost. created"
         elif ! promptyn "Could not create tunnel. Wanna continue without creating? "; then
             rm "$VHOST_ROOT" &> /dev/null
