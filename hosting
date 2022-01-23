@@ -5,7 +5,7 @@
 #              This script is used to manager nginx virtual hosts
 #              With this script you can enable, disable, edit, remove and
 #              create new virtual hosts with given template
-#       USAGE: See nsvhm --help
+#       USAGE: See hosting --help
 # REQUIPMENTS: bash, sed, grep, cat, ln, rm, tput, mkdir
 #     VERSION: 0.1
 #     LICENSE: GNU GPLv3
@@ -38,7 +38,7 @@ EN_HOSTDIR="$NGINX_DIR/sites-enabled"
 AV_HOSTDIR="$NGINX_DIR/sites-available"
 OPT_COUNT=0
 DIR2LIST=''
-CLOUDFLARED_TUNNEL=""
+CLOUDFLARED_CONF="/etc/cloudflared/config.yml"
 
 # Sample template
 read -d '' VHOST_TEMPLATE <<-"_EOF_"
@@ -376,7 +376,7 @@ vhost_create() {
     fi
 
     VHOST_TEMPLATE=$(echo "$VHOST_TEMPLATE" | sed -e "s/{HOST}/"$vhost"/g")
-    VHOST_ROOT=$(echo "$VHOST_TEMPLATE" | grep "root" |
+    VHOST_ROOT=$(echo "$VHOST_TEMPLATE" | grep "root /var/www" |
                                           sed -e 's/root//g' \
                                           -e 's/^[ \t]*//' \
                                           -e 's/\;$//g' \
@@ -391,6 +391,11 @@ vhost_create() {
                                                    -e 's/^[ \t]*//' \
                                                    -e 's/\;$//g' \
                                                    -e 's/\ .*//g')
+
+
+    CLOUDFLARED_TUNNEL_NAME=$(echo "$VHOST_TEMPLATE" | grep "tunnel:" |
+                                                   sed -e 's/tunnel: //g')
+
     VHOST_ERRORLOG_DIR=${VHOST_ERRORLOG_FILE%/*}
     VHOST_ACCESSLOG_DIR=${VHOST_ACCESSLOG_FILE%/*}
 
@@ -445,6 +450,17 @@ vhost_create() {
             else
                 out_warn "Could not change owner"
             fi
+        fi
+    fi
+
+
+    if promptyn "create cloudflare tunnel route dns ? "; then
+        if cloudflared tunnel route dns "$CLOUDFLARED_TUNNEL_NAME" "$vhost"  &> /dev/null; then
+            out_succ "Tunnel $vhost. created"
+        elif ! promptyn "Could not create tunnel. Wanna continue without creating? "; then
+            rm "$VHOST_ROOT" &> /dev/null
+            rm "$VHOST_ERRORLOG_DIR" &> /dev/null
+            die "Aborting.."
         fi
     fi
 
