@@ -157,6 +157,32 @@ out_succ() {
 #     else
 # }
 
+
+# FUNCTION: create_database
+# DESCRIPTION: create mysql database and user
+create_database() {
+    if promptyn "Create new database and user ?"; then
+        read -p "Enter username (Ctrl-C to abort): " db_username
+        read -p "Enter password (Ctrl-C to abort): " db_password
+        read -p "Enter database name (Ctrl-C to abort): " db_database
+
+        echo "Enter root password (for create new user)"
+        cmd=$(mysql -u root -p <<MYSQL_SCRIPT
+CREATE DATABASE $db_database;
+CREATE USER '$db_username'@'localhost' IDENTIFIED BY '$db_password';
+GRANT ALL PRIVILEGES ON $db_database.* TO '$db_username'@'localhost';
+FLUSH PRIVILEGES;
+MYSQL_SCRIPT
+)
+        if $cmd &> /dev/null; then
+            out_succ "Database $db_database. and $db_username created with password $db_password"
+        elif ! promptyn "Could not create database. Wanna continue without creating? "; then
+            create_database
+        fi
+    fi
+}
+
+
 #    FUNCTION: out_warn()#{{{
 # DESCRIPTION: Show message with yellow foreground colour
 #     PARAM 1: Message to show
@@ -217,6 +243,7 @@ OPTIONS:
 -d, --disable           Disable virtual host
 -l, --list              List files in directory. Can be combined with -e or -d options
 -c, --create            Create virtual host from template
+-D, --create-database   Create User and database
 -t, --template          Specify template file
 -E, --edit              Edit host
 -R, --remove            Remove host
@@ -227,7 +254,7 @@ EOF
 
 # Parsing command line args #{{{
 # -----------------------------------------
-PARSEDOPTS=$(getopt -n "$0"  -o h,r,f,e,d,l,c,t:,E,R,v:,b --long "help,restart,force,enable,disable,list,create,template:,edit,remove,vhost:,batch"  -- "$@")
+PARSEDOPTS=$(getopt -n "$0"  -o h,r,f,e,d,l,c,D,t:,E,R,v:,b --long "help,restart,force,enable,disable,list,create,create-database,template:,edit,remove,vhost:,batch"  -- "$@")
 
 if [[ "$#" -eq 0 ]]; then
     usage
@@ -271,6 +298,10 @@ do
             flag_action='create'
             action=true
             ((OPT_COUNT++))
+            shift;;
+        -D|--create-database)
+            create_database
+            end
             shift;;
         -t|--template)
             template_file="$2"
