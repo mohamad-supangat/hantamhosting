@@ -314,7 +314,7 @@ do
             create_database
             end
             shift;;
-        --cloudflared_add_host)
+        --cloudflared-add-host)
             cloudflared_add_host
             end
             shift;;
