@@ -254,17 +254,18 @@ OPTIONS:
 -l, --list              List files in directory. Can be combined with -e or -d options
 -c, --create            Create virtual host from template
 -D, --create-database   Create User and database
+-D, --create-database   Create User and database
 -t, --template          Specify template file
 -E, --edit              Edit host
 -R, --remove            Remove host
-
+--cloudflared-add-host  Add New host to cloudflared
 EOF
 }
 #}}}
 
 # Parsing command line args #{{{
 # -----------------------------------------
-PARSEDOPTS=$(getopt -n "$0"  -o h,r,f,e,d,l,c,D,t:,E,R,v:,b --long "help,restart,force,enable,disable,list,create,create-database,template:,edit,remove,vhost:,batch"  -- "$@")
+PARSEDOPTS=$(getopt -n "$0"  -o h,r,f,e,d,l,c,D,t:,E,R,v:,b --long "help,restart,force,enable,disable,list,create,create-database,template:,edit,remove,vhost:,batch,cloudflared-add-host"  -- "$@")
 
 if [[ "$#" -eq 0 ]]; then
     usage
@@ -311,6 +312,10 @@ do
             shift;;
         -D|--create-database)
             create_database
+            end
+            shift;;
+        --cloudflared_add_host)
+            cloudflared_add_host
             end
             shift;;
         -t|--template)
