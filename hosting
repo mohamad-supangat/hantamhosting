@@ -312,7 +312,7 @@ do
             shift;;
         -D|--create-database)
             create_database
-        --cloudflared_add-host)
+            end
             shift;;
         --cloudflared-add-host)
             cloudflared_add_host
