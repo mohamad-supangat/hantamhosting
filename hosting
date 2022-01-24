@@ -151,8 +151,6 @@ out_succ() {
 # DESCRIPTION: auto create dns record in CLOUDFLARED_TUNNEL
 
 cloudflared_add_host() {
-    then
-
     config=$1
     vhost=$2
 
