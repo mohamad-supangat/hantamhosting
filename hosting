@@ -151,6 +151,8 @@ out_succ() {
 # DESCRIPTION: auto create dns record in CLOUDFLARED_TUNNEL
 
 cloudflared_add_host() {
+    then
+
     config=$1
     vhost=$2
 
@@ -312,7 +314,7 @@ do
             shift;;
         -D|--create-database)
             create_database
-            end
+        --cloudflared_add-host)
             shift;;
         --cloudflared-add-host)
             cloudflared_add_host
@@ -501,6 +503,8 @@ vhost_create() {
 
 
     if promptyn "create cloudflare tunnel route dns ? "; then
+        echo $CLOUDFLARED_TUNNEL_NAME
+        echo $vhost
         if cloudflared tunnel route dns "$CLOUDFLARED_TUNNEL_NAME" "$vhost"  &> /dev/null; then
 
             out_succ "Tunnel $vhost. created"
